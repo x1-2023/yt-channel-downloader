@@ -6,3 +6,4 @@ class ColumnIndexes(IntEnum):
     TITLE = 1
     LINK = 2
     PROGRESS = 3
+    ACTIONS = 4

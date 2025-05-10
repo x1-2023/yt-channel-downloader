@@ -31,7 +31,7 @@ from classes.dialogs import CustomDialog
 from classes.dialogs import YoutubeLoginDialog
 from classes.fetch_progress_dialog import FetchProgressDialog
 from classes.login_prompt_dialog import LoginPromptDialog
-from classes.delegates import CheckBoxDelegate
+from classes.delegates import CheckBoxDelegate, ActionButtonDelegate
 from classes.YTChannel import YTChannel
 from classes.videoitem import VideoItem
 from classes.settings import SettingsDialog
@@ -161,6 +161,12 @@ class MainWindow(QMainWindow):
         cb_delegate = CheckBoxDelegate()
         self.ui.treeView.setItemDelegateForColumn(ColumnIndexes.DOWNLOAD,
                                                   cb_delegate)
+        # Thêm delegate cho cột Actions
+        action_delegate = ActionButtonDelegate(self.ui.treeView)
+        self.ui.treeView.setItemDelegateForColumn(ColumnIndexes.ACTIONS, action_delegate)
+        action_delegate.pauseClicked.connect(self.handle_pause_clicked)
+        action_delegate.resumeClicked.connect(self.handle_resume_clicked)
+        action_delegate.removeClicked.connect(self.handle_remove_clicked)
 
     def set_bold_font(self, widget, size):
         """Applies a bold font to a specific widget.
@@ -210,19 +216,19 @@ class MainWindow(QMainWindow):
 
     def show_download_error(self, index):
         """Displays a dialog for download-specific errors."""
-        QMessageBox.critical(self, "Download Error", f"An error occurred while downloading item {index}. Please check the URL and try again.")
+        QMessageBox.critical(self, "Lỗi tải về", f"Có lỗi xảy ra khi tải mục {index}. Vui lòng kiểm tra đường dẫn và thử lại.")
 
     def show_network_error(self, index):
         """Displays a dialog for network-related errors."""
-        QMessageBox.warning(self, "Network Error", f"Network issue encountered while downloading item {index}. Check your internet connection and try again.")
+        QMessageBox.warning(self, "Lỗi mạng", f"Có sự cố mạng khi tải mục {index}. Vui lòng kiểm tra kết nối Internet và thử lại.")
 
     def show_unexpected_error(self, index):
         """Displays a dialog for unexpected errors."""
-        QMessageBox.warning(self, "Unexpected Error", f"An unexpected error occurred while downloading item {index}. Please try again later.")
+        QMessageBox.warning(self, "Lỗi không xác định", f"Đã xảy ra lỗi không xác định khi tải mục {index}. Vui lòng thử lại sau.")
 
     def show_download_complete(self, index):
         """Displays a dialog when a download completes successfully."""
-        QMessageBox.information(self, "Download Complete", f"Download completed successfully for item {index}!")
+        QMessageBox.information(self, "Tải về hoàn tất", f"Tải về thành công mục {index}!")
 
     def initialize_settings(self):
         """Initializes user settings from the settings manager."""
@@ -231,7 +237,7 @@ class MainWindow(QMainWindow):
 
     def setup_select_all_checkbox(self):
         """Sets up the Select All checkbox and adds it to the layout."""
-        self.select_all_checkbox = QCheckBox("Select All", self)
+        self.select_all_checkbox = QCheckBox("Chọn tất cả", self)
         self.select_all_checkbox.setVisible(False)
         self.ui.verticalLayout.addWidget(self.select_all_checkbox)
         self.select_all_checkbox.stateChanged.connect(
@@ -406,7 +412,7 @@ class MainWindow(QMainWindow):
         self.model.clear()
         self.root_item = self.model.invisibleRootItem()
         self.model.setHorizontalHeaderLabels(
-            ['Download?', 'Title', 'Link', 'Progress'])
+            ['Tải?', 'Tiêu đề', 'Liên kết', 'Tiến trình', 'Thao tác'])
         self.ui.treeView.setModel(self.model)
 
         # Set proportional widths
@@ -418,6 +424,8 @@ class MainWindow(QMainWindow):
         header.setSectionResizeMode(ColumnIndexes.LINK,
                                     QHeaderView.ResizeMode.Stretch)
         header.setSectionResizeMode(ColumnIndexes.PROGRESS,
+                                    QHeaderView.ResizeMode.ResizeToContents)
+        header.setSectionResizeMode(ColumnIndexes.ACTIONS,
                                     QHeaderView.ResizeMode.ResizeToContents)
 
         # Set relative stretch factors (adjust as needed)
@@ -673,6 +681,9 @@ class MainWindow(QMainWindow):
         for index in self.vid_dl_indexes:
             progress_item = QtGui.QStandardItem()
             self.model.setItem(index, 3, progress_item)
+            # Đảm bảo luôn có item cho cột Actions
+            if self.model.item(index, 4) is None:
+                self.model.setItem(index, 4, QtGui.QStandardItem(""))
             link = self.model.item(index, 2).text()
             title = self.model.item(index, 1).text()
             dl_thread = DownloadThread(link, index, title, self)
@@ -710,6 +721,9 @@ class MainWindow(QMainWindow):
             progress = progress_data["progress"]
             progress_item = QtGui.QStandardItem(str(progress))
             self.model.setItem(int(file_index), 3, progress_item)
+            # Đảm bảo luôn có item cho cột Actions
+            if self.model.item(file_index, 4) is None:
+                self.model.setItem(file_index, 4, QtGui.QStandardItem(""))
             self.ui.treeView.viewport().update()
 
     def exit(self):
@@ -717,3 +731,15 @@ class MainWindow(QMainWindow):
         Exits the application by closing the PyQt main window.
         """
         QApplication.quit()
+
+    def handle_pause_clicked(self, row):
+        # TODO: Thực hiện logic pause download ở dòng row
+        print(f"Pause clicked at row {row}")
+
+    def handle_resume_clicked(self, row):
+        # TODO: Thực hiện logic resume download ở dòng row
+        print(f"Resume clicked at row {row}")
+
+    def handle_remove_clicked(self, row):
+        # TODO: Thực hiện logic remove download ở dòng row
+        print(f"Remove clicked at row {row}")

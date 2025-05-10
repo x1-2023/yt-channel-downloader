@@ -91,3 +91,47 @@ class ProgressBarDelegate(QtWidgets.QStyledItemDelegate):
         rect.setWidth(int(rect.width() * progress))
         painter.fillRect(rect, QtGui.QColor("#00c0ff"))
         painter.restore()
+
+
+class ActionButtonDelegate(QtWidgets.QStyledItemDelegate):
+    """
+    Delegate để hiển thị các nút Pause, Resume, Remove trong cột Actions.
+    """
+    pauseClicked = Signal(int)
+    resumeClicked = Signal(int)
+    removeClicked = Signal(int)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._buttons = {}
+
+    def paint(self, painter, option, index):
+        # Vẽ ba nút: Pause, Resume, Remove
+        btn_names = ["Tạm dừng", "Tiếp tục", "Xóa"]
+        btn_width = option.rect.width() // 3
+        for i, name in enumerate(btn_names):
+            btn_option = QtWidgets.QStyleOptionButton()
+            btn_option.rect = QtCore.QRect(
+                option.rect.left() + i * btn_width,
+                option.rect.top(),
+                btn_width, option.rect.height()
+            )
+            btn_option.text = name
+            btn_option.state = QtWidgets.QStyle.StateFlag.State_Enabled
+            QtWidgets.QApplication.style().drawControl(
+                QtWidgets.QStyle.ControlElement.CE_PushButton, btn_option, painter)
+
+    def editorEvent(self, event, model, option, index):
+        if event.type() == QtCore.QEvent.Type.MouseButtonRelease:
+            btn_width = option.rect.width() // 3
+            x = event.pos().x() - option.rect.left()
+            col = x // btn_width
+            row = index.row()
+            if col == 0:
+                self.pauseClicked.emit(row)
+            elif col == 1:
+                self.resumeClicked.emit(row)
+            elif col == 2:
+                self.removeClicked.emit(row)
+            return True
+        return False

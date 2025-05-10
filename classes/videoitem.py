@@ -52,8 +52,9 @@ class VideoItem:
         item_link = QtGui.QStandardItem(self.link)
         item_progress = QtGui.QStandardItem("Complete" if
                                             self.is_download_complete else "")
+        item_actions = QtGui.QStandardItem("")  # Placeholder cho cột Actions
         self.qt_item = [self.item_checkbox, item_title, item_link,
-                        item_progress]
+                        item_progress, item_actions]
 
         if self.is_download_complete:
             self._deactivate_qt_item()
